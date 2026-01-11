@@ -72,15 +72,15 @@ module BulletmarkRepairer
     end
 
     def set_up
-      @n_plus_one_in_view = @stacktraces.any? { |stacktrace| stacktrace.match?(%r{\A#{Rails.root}/app/views/[./\w]+:\d+:in `[\w]+'\z}) }
+      @n_plus_one_in_view = @stacktraces.any? { |stacktrace| stacktrace.match?(%r{\A#{Rails.root}/app/views/[./\w]+:\d+:in [`'][#:\w]+'\z}) }
 
       if n_plus_one_in_view?
         # TODO: Check the action is in the base controller file
         @file_name = "#{Rails.root}/app/controllers/#{@controller}_controller.rb"
         view_file_index = @stacktraces.index do |stacktrace|
-          stacktrace =~ %r{\A(#{Rails.root}/app/views/[./\w]+):\d+:in `[\w]+'\z} && !Pathname.new(Regexp.last_match(1)).basename.to_s.start_with?('_')
+          stacktrace =~ %r{\A(#{Rails.root}/app/views/[./\w]+):\d+:in [`'][#:\w]+'\z} && !Pathname.new(Regexp.last_match(1)).basename.to_s.start_with?('_')
         end
-        view_file, view_yield_index = @stacktraces[view_file_index].scan(%r{\A(/[./\w]+):(\d+):in `[\w]+'\z}).flatten
+        view_file, view_yield_index = @stacktraces[view_file_index].scan(%r{\A(/[./\w]+):(\d+):in [`'][#:\w]+'\z}).flatten
         view_yield_index = view_yield_index.to_i
         File.open(view_file) do |f|
           lines = f.readlines
@@ -96,8 +96,8 @@ module BulletmarkRepairer
         @index = @instance_variable_name ? "#{view_file}:#{view_yield_index}" : nil
       else
         # TODO: Ignore controllers list
-        controller_file_index = @stacktraces.index { |stacktrace| stacktrace.match?(%r{\A(#{Rails.root}/app/controllers[./\w]+):(\d+):in `[()\w\s]+'\z}) }
-        @file_name, controller_yield_index = @stacktraces[controller_file_index].scan(%r{\A(#{Rails.root}/app/controllers[./\w]+):(\d+):in `[()\w\s]+'\z}).flatten
+        controller_file_index = @stacktraces.index { |stacktrace| stacktrace.match?(%r{\A(#{Rails.root}/app/controllers[./\w]+):(\d+):in [`'][#:()\w\s]+'\z}) }
+        @file_name, controller_yield_index = @stacktraces[controller_file_index].scan(%r{\A(#{Rails.root}/app/controllers[./\w]+):(\d+):in [`'][#:()\w\s]+'\z}).flatten
         controller_yield_index = controller_yield_index.to_i
         File.open(@file_name) do |f|
           lines = f.readlines
@@ -118,8 +118,8 @@ module BulletmarkRepairer
       # TODO: Ignore files list
       # TODO: Allow model files list
       @retry = @stacktraces.any? do |stacktrace|
-                 !stacktrace.match?(%r{\A(#{Rails.root}/app/models[./\w]+):(\d+):in `[()\w\s=!?]+'\z}) &&
-                   stacktrace =~ %r{\A(#{Rails.root}/app[./\w]+):(\d+):in `[()\w\s=!?]+'\z}
+                 !stacktrace.match?(%r{\A(#{Rails.root}/app/models[./\w]+):(\d+):in [`'][#:()\w\s=!?]+'\z}) &&
+                   stacktrace =~ %r{\A(#{Rails.root}/app[./\w]+):(\d+):in [`'][#:()\w\s=!?]+'\z}
                end.tap do
         @file_name = Regexp.last_match(1)
         @line_no = Regexp.last_match(2)
