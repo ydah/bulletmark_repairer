@@ -6,7 +6,7 @@ module BulletmarkRepairer
   class Markers
     extend Forwardable
 
-    def_delegator :@markers, :each
+    def_delegator :@markers, :each_value
 
     def initialize(notifications, controller:, action:)
       @markers = {}
@@ -89,7 +89,8 @@ module BulletmarkRepairer
 
             view_yield_index -= 1
             line = lines[view_yield_index]
-            token = line&.scan(/\b?(@[\w]+)\b?/)&.flatten&.last
+            scanned = line&.scan(/\b?(@\w+)\b?/)
+            token = scanned&.flatten&.last
             @instance_variable_name = token if BulletmarkRepairer::Thread.instance_variable_name?(token)
           end
         end
@@ -106,7 +107,8 @@ module BulletmarkRepairer
 
             controller_yield_index -= 1
             line = lines[controller_yield_index]
-            @instance_variable_name = line&.scan(/\b?(@[\w]+)\b?/)&.flatten&.last
+            scanned = line&.scan(/\b?(@\w+)\b?/)
+            @instance_variable_name = scanned&.flatten&.last
             break if line.match?(/^\s+def [()\w\s=]+$/)
           end
         end
